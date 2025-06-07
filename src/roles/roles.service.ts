@@ -7,20 +7,17 @@ export class RolesService {
   constructor(private prisma: PrismaService) {}
 
   async createRole(name: string, permissionNames: string[]): Promise<Role> {
-    // Check if role already exists
     const existingRole = await this.prisma.role.findUnique({ where: { name } });
     if (existingRole) {
       throw new ConflictException(`Role '${name}' already exists`);
     }
 
-    // Validate permissions
     const validPermissions = ['todo:read', 'todo:write', 'todo:delete', 'todo:read-all', 'todo:write-all', 'todo:delete-all'];
     const invalidPermissions = permissionNames.filter((p) => !validPermissions.includes(p));
     if (invalidPermissions.length > 0) {
       throw new BadRequestException(`Invalid permissions: ${invalidPermissions.join(', ')}`);
     }
 
-    // Create role and assign permissions
     return this.prisma.role.create({
       data: {
         name,
@@ -38,7 +35,6 @@ export class RolesService {
       throw new NotFoundException('Role not found');
     }
 
-    // Check if permission already assigned
     const existingPermission = await this.prisma.permission.findFirst({
       where: { name: permissionName, roleId: role.id },
     });
